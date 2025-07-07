@@ -151,11 +151,27 @@ class SSDB
 	}
 	
 	private $async_auth_password = null;
+
+    function auth($password){
+        // If batching, send auth immediately before other commands
+        if ($this->batch_mode) {
+            // Temporarily break out of batch mode to send auth command
+            $this->batch_mode = false;
+            $this->batch_cmds = array();
+            $resp = $this->__call('auth', array($password));
+            $this->batch_mode = true;
+            return $resp === true || (is_object($resp) && $resp->ok());
+        }
+    
+        // Normal mode: send auth right away
+        return $this->__call('auth', array($password));
+    }
+
 	
-	function auth($password){
-		$this->async_auth_password = $password;
-		return null;
-	}
+	//function auth($password){
+	//	$this->async_auth_password = $password;
+	//	return null;
+	//}
 
 	function __call($cmd, $params=array()){
 		$cmd = strtolower($cmd);
